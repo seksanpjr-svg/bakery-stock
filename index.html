@@ -742,35 +742,89 @@ function renderSettings(){
       </div></div>`).join('') : `<div class="empty">ยังไม่มีร้าน</div>`;
     el.innerHTML=html;
   } else {
+    const hasUrl = scriptUrl ? true : false;
     el.innerHTML=`
       <div class="card">
-        <div class="card-title">⚙️ Google Apps Script URL</div>
-        <div class="fg"><label>วาง Script URL ที่ได้จาก Deploy</label>
-          <input id="urlInput" value="${scriptUrl}" placeholder="https://script.google.com/macros/s/..."></div>
-        <button class="btn btn-primary btn-full" onclick="saveUrl()">💾 บันทึก URL</button>
+        <div class="card-title">⚙️ Google Apps Script</div>
+        ${hasUrl
+          ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+               <span style="font-size:13px;color:var(--green)">✓ ตั้งค่าแล้ว</span>
+               <button class="btn btn-outline btn-sm" onclick="askPinThen('editUrl')">🔒 แก้ไข URL</button>
+             </div>`
+          : `<div class="fg"><label>วาง Script URL ที่ได้จาก Deploy</label>
+               <input id="urlInput" placeholder="https://script.google.com/macros/s/..."></div>
+             <button class="btn btn-primary btn-full" onclick="askPinThen('saveUrl')">💾 บันทึก URL</button>`
+        }
       </div>
       <div class="card">
         <div class="card-title">📤 Push ข้อมูลขึ้น Google Sheet</div>
-        <p class="muted" style="margin-bottom:10px;font-size:13px">ทำครั้งเดียวหลัง setup เพื่อส่งวัตถุดิบและร้านขึ้น Sheet</p>
-        <button class="btn btn-outline btn-full" onclick="pushAll()">📤 Push ทั้งหมด</button>
+        <p class="muted" style="margin-bottom:10px;font-size:13px">ส่งวัตถุดิบและร้านขึ้น Sheet</p>
+        <button class="btn btn-outline btn-full" id="pushBtn" onclick="pushAll()">📤 Push ทั้งหมด</button>
       </div>
       <div class="card">
         <div class="card-title">🔄 รีเซ็ตวัตถุดิบ</div>
-        <p class="muted" style="margin-bottom:10px;font-size:13px">ถ้าวัตถุดิบในแอปหายหรือไม่ครบ 52 รายการ — กดนี้เพื่อดึงข้อมูลเริ่มต้นกลับมา สต็อคที่กรอกไว้จะยังอยู่ครบ</p>
-        <button class="btn btn-warn btn-full" onclick="resetToDefault()">🔄 รีเซ็ตวัตถุดิบ 52 รายการ</button>
+        <p class="muted" style="margin-bottom:10px;font-size:13px">ถ้าวัตถุดิบหายหรือไม่ครบ 52 รายการ — กดนี้เพื่อดึงข้อมูลเริ่มต้นกลับมา สต็อคที่กรอกไว้จะยังอยู่ครบ</p>
+        <button class="btn btn-warn btn-full" onclick="askPinThen('resetToDefault')">🔒 รีเซ็ตวัตถุดิบ 52 รายการ</button>
       </div>`;
   }
 }
-function saveUrl(){
-  scriptUrl=document.getElementById('urlInput').value.trim();
-  persist(); toast('บันทึก URL แล้ว'); renderHome();
+
+// ==================== PIN ====================
+// รหัสผ่านสำหรับฟังก์ชันสำคัญ — เปลี่ยนได้ที่นี่
+const ADMIN_PIN = '123456';
+let pendingPinAction = null;
+
+function askPinThen(action){
+  pendingPinAction = action;
+  const pin = prompt('ใส่รหัสผ่าน / လျှို့ဝှက်နံပါတ်ထည့်ပါ:');
+  if(pin === null) return; // กด cancel
+  if(pin !== ADMIN_PIN){ alert('รหัสผิด / လျှို့ဝှက်နံပါတ်မှားသည်'); return; }
+  executePinAction(action);
 }
+
+function executePinAction(action){
+  if(action === 'saveUrl'){
+    const val = document.getElementById('urlInput')?.value?.trim();
+    if(!val){ alert('กรุณาใส่ URL'); return; }
+    scriptUrl = val;
+    persist(); toast('✓ บันทึก URL แล้ว'); renderHome(); renderSettings();
+  }
+  if(action === 'editUrl'){
+    const newUrl = prompt('ใส่ Script URL ใหม่:', scriptUrl);
+    if(!newUrl) return;
+    scriptUrl = newUrl.trim();
+    persist(); toast('✓ อัปเดต URL แล้ว'); renderSettings();
+  }
+  if(action === 'resetToDefault'){
+    if(!confirm('รีเซ็ตวัตถุดิบกลับเป็น 52 รายการ? สต็อคที่กรอกไว้จะยังอยู่ครบ')) return;
+    ingredients = DEFAULT_ING();
+    persist(); renderAll(); toast('✓ รีเซ็ตแล้ว — กด Push เพื่ออัปเดต Sheet');
+  }
+}
+
+function resetToDefault(){
+  // เรียกผ่าน PIN เท่านั้น — ฟังก์ชันนี้ไม่ควรถูกเรียกโดยตรง
+  askPinThen('resetToDefault');
+}
+
 async function pushAll(){
   if(!scriptUrl){ toast(t('setupWarn')); return; }
-  toast('กำลัง push...');
-  for(const ing of ingredients) await api({action:'saveIngredient',ingredient:{...ing,units:ing.units.join(',')}}).catch(()=>{});
-  for(const s of suppliers)     await api({action:'saveSupplier',supplier:s}).catch(()=>{});
-  toast('✓ push เสร็จ');
+  const btn = document.getElementById('pushBtn');
+  if(btn){
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px"></span>กำลัง Push...';
+  }
+  try{
+    for(const ing of ingredients) await api({action:'saveIngredient',ingredient:{...ing,units:ing.units.join(',')}}).catch(()=>{});
+    for(const s of suppliers)     await api({action:'saveSupplier',supplier:s}).catch(()=>{});
+    toast('✓ Push เสร็จแล้ว');
+  } catch(e){
+    toast('❌ Push ไม่ได้: '+e.message);
+  }
+  if(btn){
+    btn.disabled = false;
+    btn.innerHTML = '📤 Push ทั้งหมด';
+  }
 }
 
 // ==================== MODALS ====================
