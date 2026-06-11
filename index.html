@@ -709,7 +709,7 @@ function switchStab(tab){
 function renderSettings(){
   const el=document.getElementById('settingsContent');
   if(curStab==='ing'){
-    const groups=[...new Set(ingredients.map(i=>i.group))];
+    const groups=[...new Set(ingredients.sort((a,b)=>a.sku.localeCompare(b.sku)).map(i=>i.group))];
     let html=`<button class="btn btn-primary btn-full" style="margin-bottom:12px" onclick="openIngModal()">${t('addIng')}</button>`;
     groups.forEach(g=>{
       html+=`<div class="grp-hdr">${g}</div><div class="card" style="margin-top:0;border-radius:0 0 var(--r) var(--r);">`;
@@ -809,21 +809,37 @@ function resetToDefault(){
 
 async function pushAll(){
   if(!scriptUrl){ toast(t('setupWarn')); return; }
-  const btn = document.getElementById('pushBtn');
-  if(btn){
-    btn.disabled = true;
-    btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px"></span>กำลัง Push...';
-  }
+
+  // แสดง overlay ล็อคหน้าจอ กดไปไหนไม่ได้
+  const overlay = document.createElement('div');
+  overlay.id = 'pushOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+  overlay.innerHTML = `
+    <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div>
+    <div style="color:#fff;font-size:16px;font-weight:700;text-align:center;line-height:1.6">
+      กำลัง Push ข้อมูล...<br>
+      <span style="font-size:13px;opacity:0.8">ဒေတာတင်နေသည်... မပိတ်ပါနှင့်</span>
+    </div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center">
+      ห้ามออกจากหน้านี้จนกว่าจะเสร็จ<br>
+      <span style="font-size:11px">ပြီးသည်အထိ ဆက်စောင့်ပါ</span>
+    </div>`;
+  document.body.appendChild(overlay);
+
   try{
-    for(const ing of ingredients) await api({action:'saveIngredient',ingredient:{...ing,units:ing.units.join(',')}}).catch(()=>{});
-    for(const s of suppliers)     await api({action:'saveSupplier',supplier:s}).catch(()=>{});
-    toast('✓ Push เสร็จแล้ว');
+    // เรียง ingredients ตาม SKU ก่อน push
+    const sorted = [...ingredients].sort((a,b)=>a.sku.localeCompare(b.sku));
+    for(const ing of sorted){
+      await api({action:'saveIngredient',ingredient:{...ing,units:ing.units.join(',')}});
+    }
+    for(const s of suppliers){
+      await api({action:'saveSupplier',supplier:s});
+    }
+    document.body.removeChild(overlay);
+    toast('✓ Push เสร็จแล้ว / ဒေတာတင်ပြီးပါပြီ');
   } catch(e){
+    document.body.removeChild(overlay);
     toast('❌ Push ไม่ได้: '+e.message);
-  }
-  if(btn){
-    btn.disabled = false;
-    btn.innerHTML = '📤 Push ทั้งหมด';
   }
 }
 
