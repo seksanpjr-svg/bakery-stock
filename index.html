@@ -302,6 +302,29 @@ label{font-size:12px;color:var(--muted);margin-bottom:4px;display:block}
   </div>
 </div>
 
+<!-- MODAL: ชื่อผู้บันทึก -->
+<div class="overlay" id="modUser">
+  <div class="modal">
+    <div class="modal-title">
+      <span>ผู้บันทึก / မှတ်တမ်းတင်သူ</span>
+      <button class="modal-close" onclick="closeModal('modUser')">×</button>
+    </div>
+    <input type="hidden" id="modUserCallback">
+    <div class="fg">
+      <label>เลือกชื่อ / နာမည်ရွေးပါ</label>
+      <select id="userSelect" style="font-size:16px;padding:12px">
+        <option value="">-- เลือกชื่อ --</option>
+        <option value="C">C</option>
+        <option value="Mook">Mook</option>
+        <option value="Tum">Tum</option>
+        <option value="Nes">Nes</option>
+        <option value="เจ้าของ">เจ้าของ</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full mt8" onclick="confirmUserSelect()">✓ ยืนยัน / အတည်ပြုမည်</button>
+  </div>
+</div>
+
 <!-- MODAL: supplier -->
 <div class="overlay" id="modSupp">
   <div class="modal">
@@ -478,21 +501,44 @@ async function syncNow(){
   const btn=document.getElementById('syncBtn'); btn.classList.add('syncing');
   try{
     const d=await api({action:'getAll'});
-    if(d.ingredients?.length) ingredients=d.ingredients.map(r=>({
-      id:r.id,sku:r.sku,name:r.name,nameMy:r.nameMy||'',
-      group:r.group,units:(r.units||'').split(',').filter(Boolean),
-      type:r.type,supplierId:r.supplierId,reorder:+r.reorder||0
-    }));
+    // ป้องกัน: sync ingredients จาก Sheet เฉพาะเมื่อ Sheet มีมากกว่าหรือเท่ากับในแอป
+    if(d.ingredients?.length && d.ingredients.length >= ingredients.length){
+      ingredients=d.ingredients.map(r=>({
+        id:r.id,sku:String(r.sku).padStart(3,'0'),name:r.name,nameMy:r.nameMy||'',
+        group:r.group,units:(r.units||'').split(',').filter(Boolean),
+        type:r.type||'count',supplierId:r.supplierId,reorder:+r.reorder||0
+      }));
+    } else if(d.ingredients?.length && d.ingredients.length < ingredients.length){
+      // Sheet มีน้อยกว่า — อัปเดตเฉพาะรายการที่มีใน Sheet ไม่ทับทั้งหมด
+      d.ingredients.forEach(r=>{
+        const idx=ingredients.findIndex(i=>i.id===r.id);
+        if(idx>=0) ingredients[idx]={
+          ...ingredients[idx],
+          sku:String(r.sku).padStart(3,'0'),name:r.name,nameMy:r.nameMy||'',
+          group:r.group,units:(r.units||'').split(',').filter(Boolean),
+          supplierId:r.supplierId,reorder:+r.reorder||0
+        };
+      });
+    }
     if(d.suppliers?.length) suppliers=d.suppliers.map(r=>({id:r.id,name:r.name,contact:r.contact||''}));
+    // sync stock เฉพาะถ้ามีข้อมูล
     if(d.stock?.length){
-      stockData={};
-      d.stock.forEach(r=>{ if(!stockData[r.ingId]) stockData[r.ingId]={}; stockData[r.ingId][r.unit]=+r.qty||0; });
+      d.stock.forEach(r=>{
+        if(!stockData[r.ingId]) stockData[r.ingId]={};
+        stockData[r.ingId][r.unit]=+r.qty||0;
+      });
     }
     if(d.history?.length) history=d.history.map(r=>({date:r.date,count:r.entryCount,imageUrl:r.imageUrl||''}));
     lastSync=new Date().toLocaleString('th-TH');
     persist(); renderAll(); toast(t('syncOk'));
   }catch(e){ toast(t('syncFail')+': '+e.message); }
   btn.classList.remove('syncing');
+}
+
+function resetToDefault(){
+  if(!confirm('รีเซ็ตวัตถุดิบกลับเป็น 52 รายการเริ่มต้น? สต็อคที่กรอกไว้จะยังอยู่ครบ')) return;
+  ingredients=DEFAULT_ING();
+  persist(); renderAll(); toast('✓ รีเซ็ตวัตถุดิบแล้ว — กด Push เพื่ออัปเดต Sheet');
 }
 
 // ==================== NAV ====================
@@ -625,14 +671,32 @@ function renderOrder(){
 function renderHistory(){
   const el=document.getElementById('histList');
   if(!history.length){ el.innerHTML=`<div class="empty">${t('noHist')}</div>`; return; }
-  el.innerHTML=history.slice(0,30).map(h=>`
-    <div class="history-row">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${new Date(h.date).toLocaleString('th-TH')}</div>
-        <div class="muted">${h.count} รายการ</div>
+  el.innerHTML=history.map(h=>{
+    const date=new Date(h.date).toLocaleString('th-TH');
+    const items=h.items||[];
+    const itemsHtml=items.length?`
+      <div style="margin-top:6px;background:#F9F9F9;border-radius:6px;padding:6px 8px">
+        ${items.map(it=>`
+          <div style="font-size:11px;padding:2px 0;border-bottom:1px solid #EEE;display:flex;gap:6px;align-items:center">
+            <span style="flex:1;font-size:12px">${it.name}${it.nameMy?' / '+it.nameMy:''} (${it.unit})</span>
+            <span style="color:var(--muted)">${it.from}</span>
+            <span>→</span>
+            <span style="font-weight:700;color:${it.to>it.from?'var(--green)':it.to<it.from?'var(--danger)':'inherit'}">${it.to}</span>
+          </div>`).join('')}
+      </div>`:''
+    ;
+    return `<div style="padding:10px 0;border-bottom:1px solid #F0F0F0">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:var(--accent)">${h.user||'ไม่ระบุ'}</div>
+          <div style="font-size:11px;color:var(--muted)">${date} · ${h.device||''} · ${h.method||''}</div>
+          <div style="font-size:12px;margin-top:2px">${h.action||''} — ${items.length} รายการ</div>
+        </div>
+        ${h.imageUrl?`<a href="${h.imageUrl}" target="_blank" class="btn btn-sm btn-outline" style="flex-shrink:0">📷</a>`:''}
       </div>
-      ${h.imageUrl?`<a href="${h.imageUrl}" target="_blank" class="btn btn-sm btn-outline">${t('viewImg')}</a>`:''}
-    </div>`).join('');
+      ${itemsHtml}
+    </div>`;
+  }).join('');
 }
 
 // ==================== SETTINGS ====================
@@ -689,6 +753,11 @@ function renderSettings(){
         <div class="card-title">📤 Push ข้อมูลขึ้น Google Sheet</div>
         <p class="muted" style="margin-bottom:10px;font-size:13px">ทำครั้งเดียวหลัง setup เพื่อส่งวัตถุดิบและร้านขึ้น Sheet</p>
         <button class="btn btn-outline btn-full" onclick="pushAll()">📤 Push ทั้งหมด</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 รีเซ็ตวัตถุดิบ</div>
+        <p class="muted" style="margin-bottom:10px;font-size:13px">ถ้าวัตถุดิบในแอปหายหรือไม่ครบ 52 รายการ — กดนี้เพื่อดึงข้อมูลเริ่มต้นกลับมา สต็อคที่กรอกไว้จะยังอยู่ครบ</p>
+        <button class="btn btn-warn btn-full" onclick="resetToDefault()">🔄 รีเซ็ตวัตถุดิบ 52 รายการ</button>
       </div>`;
   }
 }
@@ -748,6 +817,50 @@ async function deleteIngredient(id){
   persist(); renderAll();
 }
 
+// ==================== USER SELECT ====================
+let pendingUserCallback=null;
+function askUser(callback){
+  pendingUserCallback=callback;
+  document.getElementById('userSelect').value='';
+  openModal('modUser');
+}
+function confirmUserSelect(){
+  const name=document.getElementById('userSelect').value;
+  if(!name){ alert('กรุณาเลือกชื่อ'); return; }
+  closeModal('modUser');
+  if(pendingUserCallback) pendingUserCallback(name);
+  pendingUserCallback=null;
+}
+
+// ==================== DEVICE DETECT ====================
+function getDevice(){
+  const ua=navigator.userAgent;
+  if(/iPhone/.test(ua)) return 'iPhone';
+  if(/iPad/.test(ua)) return 'iPad';
+  if(/Android/.test(ua)) return 'Android';
+  return 'Desktop';
+}
+
+// ==================== DETAILED HISTORY ====================
+function addHistory(entry){
+  // entry: {user, action, method, items:[{name,unit,from,to}], imageUrl}
+  const h={
+    date: new Date().toISOString(),
+    user: entry.user,
+    action: entry.action,
+    method: entry.method,
+    device: getDevice(),
+    items: entry.items||[],
+    imageUrl: entry.imageUrl||'',
+    count: entry.items?.length||0,
+  };
+  history.unshift(h);
+  // เก็บแค่ 60 วัน
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-60);
+  history=history.filter(h2=>new Date(h2.date)>cutoff);
+  persist();
+}
+
 function openStockModal(id){
   const ing=ingredients.find(i=>i.id===id), d=stockData[id]||{};
   document.getElementById('modStockId').value=id;
@@ -755,19 +868,44 @@ function openStockModal(id){
   document.getElementById('modStockFields').innerHTML=ing.units.map(u=>`
     <div class="fg">
       <label>${u}</label>
-      <input type="number" id="sq_${u}" value="${d[u]||0}" min="0" style="font-size:20px;font-weight:700;text-align:center">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--muted);min-width:40px">เดิม: ${d[u]||0}</span>
+        <input type="number" id="sq_${u}" value="${d[u]||0}" min="0" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+      </div>
     </div>`).join('');
   openModal('modStock');
 }
+
 async function saveStockEdit(){
-  const id=document.getElementById('modStockId').value, ing=ingredients.find(i=>i.id===id), d={};
-  ing.units.forEach(u=>{ d[u]=parseInt(document.getElementById('sq_'+u).value)||0; });
-  stockData[id]=d;
-  if(scriptUrl){
-    const entries=ing.units.map(u=>({ingId:id,unit:u,qty:d[u]}));
-    await api({action:'saveStock',entries,imageUrl:''}).catch(()=>{});
-  }
-  persist(); closeModal('modStock'); renderAll(); toast('✓ บันทึกแล้ว');
+  const id=document.getElementById('modStockId').value;
+  const ing=ingredients.find(i=>i.id===id);
+  const oldData={...stockData[id]||{}};
+  const newData={};
+  ing.units.forEach(u=>{ newData[u]=parseInt(document.getElementById('sq_'+u).value)||0; });
+
+  askUser(async(userName)=>{
+    // บันทึกการเปลี่ยนแปลง
+    const changedItems=ing.units
+      .filter(u=>(oldData[u]||0)!==newData[u])
+      .map(u=>({name:ing.name,nameMy:ing.nameMy||'',unit:u,from:oldData[u]||0,to:newData[u]}));
+
+    stockData[id]=newData;
+
+    if(scriptUrl){
+      const entries=ing.units.map(u=>({ingId:id,unit:u,qty:newData[u]}));
+      await api({action:'saveStock',entries,imageUrl:'',
+        user:userName,method:'manual',
+        changes:changedItems
+      }).catch(()=>{});
+    }
+
+    addHistory({
+      user:userName, action:'แก้ไขสต็อค', method:'กรอกเอง',
+      items:changedItems, imageUrl:''
+    });
+
+    persist(); closeModal('modStock'); renderAll(); toast('✓ บันทึกแล้ว');
+  });
 }
 
 function openSuppModal(id){
@@ -845,23 +983,38 @@ function renderScanResult(entries){
 }
 
 async function confirmScan(){
-  const entries=[];
-  pendingEntries.forEach((entry,idx)=>{
-    const ing=ingredients.find(i=>i.sku===entry.sku); if(!ing) return;
-    const d={};
-    ing.units.forEach(u=>{ const el=document.getElementById(`sc_${idx}_${u}`); d[u]=el?parseInt(el.value)||0:0; });
-    stockData[ing.id]=d;
-    ing.units.forEach(u=>entries.push({ingId:ing.id,unit:u,qty:d[u]}));
+  askUser(async(userName)=>{
+    const entries=[];
+    const changedItems=[];
+    pendingEntries.forEach((entry,idx)=>{
+      const ing=ingredients.find(i=>i.sku===entry.sku); if(!ing) return;
+      const oldData={...stockData[ing.id]||{}};
+      const newData={};
+      ing.units.forEach(u=>{ const el=document.getElementById(`sc_${idx}_${u}`); newData[u]=el?parseInt(el.value)||0:0; });
+      ing.units.forEach(u=>{
+        changedItems.push({name:ing.name,nameMy:ing.nameMy||'',unit:u,from:oldData[u]||0,to:newData[u]});
+        entries.push({ingId:ing.id,unit:u,qty:newData[u]});
+      });
+      stockData[ing.id]=newData;
+    });
+
+    if(scriptUrl && entries.length){
+      await api({action:'saveStock',entries,imageUrl:pendingImgUrl,
+        user:userName,method:'scan',changes:changedItems
+      }).catch(()=>{});
+    }
+
+    addHistory({
+      user:userName, action:'สแกนใบเช็คสต็อค', method:'สแกน',
+      items:changedItems, imageUrl:pendingImgUrl
+    });
+
+    persist(); renderAll();
+    document.getElementById('scanResult').style.display='none';
+    document.getElementById('previewBox').style.display='none';
+    pendingEntries=[]; pendingB64=''; pendingMime=''; pendingImgUrl='';
+    showPage('home'); toast('✓ บันทึกแล้ว');
   });
-  if(scriptUrl && entries.length){
-    await api({action:'saveStock',entries,imageUrl:pendingImgUrl}).catch(()=>{});
-  }
-  history.unshift({date:new Date().toISOString(),count:pendingEntries.length,imageUrl:pendingImgUrl});
-  persist(); renderAll();
-  document.getElementById('scanResult').style.display='none';
-  document.getElementById('previewBox').style.display='none';
-  pendingEntries=[]; pendingB64=''; pendingMime=''; pendingImgUrl='';
-  showPage('home'); toast(t('t-btn-save')+' ✓');
 }
 
 function cancelScan(){
