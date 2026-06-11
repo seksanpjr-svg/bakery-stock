@@ -43,9 +43,9 @@ body{font-family:var(--font);background:#F5F5F5;color:var(--text);min-height:100
 
 /* stat row */
 .stat-row{display:flex;gap:8px}
-.stat{flex:1;background:#F9F9F9;border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
-.stat-num{font-size:22px;font-weight:800}
-.stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+.stat{flex:1;background:#F9F9F9;border:1px solid var(--border);border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer}
+.stat-num{font-size:32px;font-weight:800}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
 .stat.warn .stat-num{color:var(--warn)}
 .stat.danger .stat-num{color:var(--danger)}
 
@@ -136,6 +136,20 @@ label{font-size:12px;color:var(--muted);margin-bottom:4px;display:block}
 .setup-warn{background:var(--warn-bg);border:1px solid #FCD34D;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:13px}
 .history-row{padding:9px 0;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:10px}
 .history-row:last-child{border-bottom:none}
+/* +/- stepper */
+.stepper{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.stepper-btn{width:44px;height:48px;border:none;background:#F5F5F5;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stepper-btn:active{background:#E5E5E5}
+.stepper input{border:none;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);border-radius:0;text-align:center;font-size:22px;font-weight:700;height:48px;min-width:0;flex:1}
+/* history collapse */
+.hist-item{border-bottom:1px solid #F0F0F0}
+.hist-header{display:flex;align-items:center;padding:10px 0;cursor:pointer;gap:8px}
+.hist-detail{display:none;background:#F9F9F9;border-radius:6px;padding:8px;margin-bottom:8px}
+.hist-detail.open{display:block}
+/* unread badge on history */
+.hist-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.hist-tag-scan{background:#DBEAFE;color:#1D4ED8}
+.hist-tag-manual{background:#D1FAE5;color:#065F46}
 </style>
 </head>
 <body>
@@ -562,11 +576,25 @@ function renderAll(){ applyTx(); renderHome(); renderPage(curPage); updateBadge(
 // ==================== HOME ====================
 function renderHome(){
   const low=getLow(), out=ingredients.filter(i=>getStatus(i)==='out');
+  // หาวันที่เช็คล่าสุดจาก history
+  const lastCheck = history.length ? new Date(history[0].date).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : null;
   document.getElementById('statsRow').innerHTML=`
-    <div class="stat"><div class="stat-num">${ingredients.length}</div><div class="stat-label">${t('statTotal')}</div></div>
-    <div class="stat warn"><div class="stat-num">${low.length}</div><div class="stat-label">${t('statLow')}</div></div>
-    <div class="stat danger"><div class="stat-num">${out.length}</div><div class="stat-label">${t('statOut')}</div></div>`;
-  document.getElementById('lastSyncTxt').textContent=lastSync?t('lastSync')+lastSync:'';
+    <div class="stat" onclick="showPage('stock')">
+      <div class="stat-num">${ingredients.length}</div>
+      <div class="stat-label">${t('statTotal')}</div>
+    </div>
+    <div class="stat warn" onclick="showPage('order')">
+      <div class="stat-num">${low.length}</div>
+      <div class="stat-label">${t('statLow')}</div>
+    </div>
+    <div class="stat danger" onclick="showPage('order')">
+      <div class="stat-num">${out.length}</div>
+      <div class="stat-label">${t('statOut')}</div>
+    </div>`;
+  const syncEl = document.getElementById('lastSyncTxt');
+  let infoTxt = lastSync ? t('lastSync')+lastSync : '';
+  if(lastCheck) infoTxt += (infoTxt?' · ':'') + (lang==='my'?'နောက်ဆုံးစစ်ဆေး: ':'เช็คล่าสุด: ') + lastCheck;
+  syncEl.textContent = infoTxt;
   document.getElementById('setupWarn').innerHTML=!scriptUrl?`<div class="setup-warn">${t('setupWarn')}</div>`:'';
   const el=document.getElementById('lowList');
   if(!low.length){ el.innerHTML=`<div class="empty">${t('noLow')}</div>`; updateBadge(); return; }
@@ -581,7 +609,7 @@ function renderHome(){
         <div class="ing-meta">${units}</div>
       </div>
       <span class="chip chip-${s==='out'?'out':'warn'}">${t(s)}</span>
-      <button class="btn-icon" onclick="openStockModal('${ing.id}')">${t('editStock')}</button>
+      <button class="btn btn-outline btn-sm" onclick="openStockModal('${ing.id}')">📦 ${lang==='my'?'ပြင်':'อัปเดต'}</button>
     </div>`;
   }).join('');
   updateBadge();
@@ -594,10 +622,11 @@ function updateBadge(){
 // ==================== STOCK ====================
 function renderStock(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
-  const groups=[...new Set(ingredients.map(i=>i.group))];
+  const sorted=[...ingredients].sort((a,b)=>a.sku.localeCompare(b.sku));
+  const groups=[...new Set(sorted.map(i=>i.group))];
   let html='';
   groups.forEach(g=>{
-    const items=ingredients.filter(i=>i.group===g&&(i.name.toLowerCase().includes(q)||i.sku.includes(q)||(i.nameMy||'').includes(q)));
+    const items=sorted.filter(i=>i.group===g&&(i.name.toLowerCase().includes(q)||i.sku.includes(q)||(i.nameMy||'').includes(q)));
     if(!items.length) return;
     html+=`<div class="grp-hdr">${g}</div><div class="card" style="margin-top:0;border-radius:0 0 var(--r) var(--r);">`;
     items.forEach(ing=>{
@@ -609,11 +638,11 @@ function renderStock(){
           <div class="ing-name">${ing.name}</div>
           <div class="ing-name-my">${ing.nameMy||''}</div>
           <div style="margin-top:4px">${chips}</div>
-          <div class="ing-meta">${t('noSupp')==getSuppName(ing.supplierId)?'':getSuppName(ing.supplierId)}</div>
+          <div class="ing-meta">${getSuppName(ing.supplierId)===t('noSupp')?'':getSuppName(ing.supplierId)}</div>
         </div>
-        <div class="ing-actions">
-          <button class="btn btn-outline btn-sm" onclick="openStockModal('${ing.id}')">${t('editStock')}</button>
-          <button class="btn-icon" onclick="openIngModal('${ing.id}')" title="แก้ไขรายการ">${t('editItem')}</button>
+        <div class="ing-actions" style="flex-direction:column;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="openStockModal('${ing.id}')">📦 ${lang==='my'?'အရေအတွက်':'อัปเดตสต็อค'}</button>
+          <button class="btn btn-outline btn-sm" onclick="openIngModal('${ing.id}')">⚙️ ${lang==='my'?'အချက်အလက်':'แก้ข้อมูล'}</button>
         </div>
       </div>`;
     });
@@ -629,11 +658,35 @@ function switchOrderTab(tab){
   document.getElementById('tab-'+tab).classList.add('active');
   renderOrder();
 }
+
+function copyOrderToLine(){
+  const low=getLow();
+  if(!low.length){ toast('ไม่มีรายการที่ต้องสั่ง'); return; }
+  const today=new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  let txt=`📦 รายการสั่งของ ${today}\n`;
+  const bySup={};
+  low.forEach(ing=>{ const k=ing.supplierId||'__none__'; (bySup[k]=bySup[k]||[]).push(ing); });
+  Object.entries(bySup).forEach(([sid,items])=>{
+    const sn=sid==='__none__'?'ไม่ระบุร้าน':getSuppName(sid);
+    txt+=`\n🏪 ${sn}:\n`;
+    items.forEach(ing=>{ txt+=`- ${ing.name} (${getStatus(ing)==='out'?'หมด':'ใกล้หมด'})\n`; });
+  });
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>toast('✓ copy แล้ว — วางใน LINE ได้เลย'));
+  } else {
+    const el=document.createElement('textarea');
+    el.value=txt; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    toast('✓ copy แล้ว — วางใน LINE ได้เลย');
+  }
+}
+
 function renderOrder(){
   const low=getLow(), el=document.getElementById('orderContent');
   if(!low.length){ el.innerHTML=`<div class="empty">${t('noOrder')}</div>`; return; }
+  const copyBtn=`<button class="btn btn-primary btn-full" style="margin-bottom:12px" onclick="copyOrderToLine()">📋 ${lang==='my'?'LINE သို့ copy လုပ်မည်':'copy ส่ง LINE'}</button>`;
   if(curOrderTab==='all'){
-    el.innerHTML='<div class="card">'+low.map(ing=>{
+    el.innerHTML=copyBtn+'<div class="card">'+low.map(ing=>{
       const s=getStatus(ing), d=stockData[ing.id]||{};
       return `<div class="ing-row">
         <span class="ing-sku">${ing.sku}</span>
@@ -648,7 +701,7 @@ function renderOrder(){
   } else {
     const bySup={};
     low.forEach(ing=>{ const k=ing.supplierId||'__none__'; (bySup[k]=bySup[k]||[]).push(ing); });
-    el.innerHTML=Object.entries(bySup).map(([sid,items])=>{
+    el.innerHTML=copyBtn+Object.entries(bySup).map(([sid,items])=>{
       const sn=sid==='__none__'?t('noSupp'):getSuppName(sid);
       const supp=suppliers.find(s=>s.id===sid);
       return `<div class="supp-card">
@@ -668,33 +721,38 @@ function renderOrder(){
 }
 
 // ==================== HISTORY ====================
+function toggleHistDetail(idx){
+  const el=document.getElementById('hd-'+idx);
+  if(el) el.classList.toggle('open');
+}
+
 function renderHistory(){
   const el=document.getElementById('histList');
   if(!history.length){ el.innerHTML=`<div class="empty">${t('noHist')}</div>`; return; }
-  el.innerHTML=history.map(h=>{
-    const date=new Date(h.date).toLocaleString('th-TH');
+  el.innerHTML=history.map((h,idx)=>{
+    const date=new Date(h.date).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
     const items=h.items||[];
-    const itemsHtml=items.length?`
-      <div style="margin-top:6px;background:#F9F9F9;border-radius:6px;padding:6px 8px">
+    const tag=h.method==='สแกน'?`<span class="hist-tag hist-tag-scan">📷 สแกน</span>`:`<span class="hist-tag hist-tag-manual">✏️ กรอกเอง</span>`;
+    const detail=items.length?`
+      <div class="hist-detail" id="hd-${idx}">
         ${items.map(it=>`
-          <div style="font-size:11px;padding:2px 0;border-bottom:1px solid #EEE;display:flex;gap:6px;align-items:center">
-            <span style="flex:1;font-size:12px">${it.name}${it.nameMy?' / '+it.nameMy:''} (${it.unit})</span>
+          <div style="display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px solid #EEE;font-size:12px">
+            <span style="flex:1">${it.name} (${it.unit})</span>
             <span style="color:var(--muted)">${it.from}</span>
             <span>→</span>
             <span style="font-weight:700;color:${it.to>it.from?'var(--green)':it.to<it.from?'var(--danger)':'inherit'}">${it.to}</span>
           </div>`).join('')}
-      </div>`:''
-    ;
-    return `<div style="padding:10px 0;border-bottom:1px solid #F0F0F0">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        ${h.imageUrl?`<a href="${h.imageUrl}" target="_blank" class="btn btn-sm btn-outline" style="margin-top:6px;width:100%">📷 ดูรูปสแกน / ဓာတ်ပုံကြည့်</a>`:''}
+      </div>`:'';
+    return `<div class="hist-item">
+      <div class="hist-header" onclick="toggleHistDetail(${idx})">
         <div style="flex:1">
-          <div style="font-size:12px;font-weight:700;color:var(--accent)">${h.user||'ไม่ระบุ'}</div>
-          <div style="font-size:11px;color:var(--muted)">${date} · ${h.device||''} · ${h.method||''}</div>
-          <div style="font-size:12px;margin-top:2px">${h.action||''} — ${items.length} รายการ</div>
+          <div style="font-size:13px;font-weight:700">${h.user||'ไม่ระบุ'} ${tag}</div>
+          <div style="font-size:11px;color:var(--muted)">${date} · ${h.device||''}</div>
+          <div style="font-size:12px;margin-top:1px">${items.length} รายการ ${items.length?'▾':''}</div>
         </div>
-        ${h.imageUrl?`<a href="${h.imageUrl}" target="_blank" class="btn btn-sm btn-outline" style="flex-shrink:0">📷</a>`:''}
       </div>
-      ${itemsHtml}
+      ${detail}
     </div>`;
   }).join('');
 }
@@ -937,13 +995,21 @@ function openStockModal(id){
   document.getElementById('modStockTitle').textContent=`${ing.name}${ing.nameMy?' / '+ing.nameMy:''}`;
   document.getElementById('modStockFields').innerHTML=ing.units.map(u=>`
     <div class="fg">
-      <label>${u}</label>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:12px;color:var(--muted);min-width:40px">เดิม: ${d[u]||0}</span>
-        <input type="number" id="sq_${u}" value="${d[u]||0}" min="0" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+      <label>${u} <span style="color:var(--muted);font-size:11px">(${lang==='my'?'လက်ရှိ':'เดิม'}: ${d[u]||0})</span></label>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="stepQty('sq_${u}',-1)">−</button>
+        <input type="number" id="sq_${u}" value="${d[u]||0}" min="0">
+        <button class="stepper-btn" onclick="stepQty('sq_${u}',1)">+</button>
       </div>
     </div>`).join('');
   openModal('modStock');
+}
+
+function stepQty(id, delta){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const val=parseInt(el.value)||0;
+  el.value=Math.max(0, val+delta);
 }
 
 async function saveStockEdit(){
@@ -1031,24 +1097,38 @@ const toB64=f=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>r
 let pendingImgUrl='';
 
 function renderScanResult(entries){
+  const readSkus=entries.map(e=>e.sku);
+  const missed=ingredients.filter(i=>!readSkus.includes(i.sku));
+  let missedHtml='';
+  if(missed.length){
+    missedHtml=`<div style="background:var(--warn-bg);border:1px solid #FCD34D;border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:6px">
+        ⚠️ อ่านไม่ได้ ${missed.length} รายการ — กรอกเองได้ด้านล่าง<br>
+        <span style="font-size:11px;font-family:var(--font)">မဖတ်နိုင်သော ${missed.length} ခု — အောက်တွင်ဖြည့်ပါ</span>
+      </div>
+      ${missed.map(ing=>`<div style="font-size:12px;color:#92400E">• ${ing.sku} ${ing.name} / ${ing.nameMy||''}</div>`).join('')}
+    </div>`;
+  }
   if(!entries.length){
-    document.getElementById('resultTable').innerHTML=`<div class="empty">${t('scanErr')}</div>`;
+    document.getElementById('resultTable').innerHTML=missedHtml+`<div class="empty">${t('scanErr')}</div>`;
     document.getElementById('scanResult').style.display='block'; return;
   }
-  let html='<table class="rtable"><tr><th>รหัส</th><th>ชื่อ</th><th>จำนวน</th></tr>';
+  let html='<table class="rtable"><tr><th>รหัส</th><th>ชื่อ / အမည်</th><th>จำนวน / အရေအတွက်</th></tr>';
   entries.forEach((entry,idx)=>{
     const ing=ingredients.find(i=>i.sku===entry.sku);
     const name=ing?`${ing.name}${ing.nameMy?' / '+ing.nameMy:''}`:'❓ '+entry.sku;
     const units=ing?ing.units:Object.keys(entry.quantities||{});
     html+=`<tr><td>${entry.sku}</td><td style="font-size:12px">${name}</td><td>${
-      units.map(u=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-        <span style="font-size:11px;min-width:36px">${u}</span>
-        <input type="number" class="qty-input" id="sc_${idx}_${u}" value="${entry.quantities?.[u]||0}" min="0">
+      units.map(u=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+        <button onclick="stepQty('sc_${idx}_${u}',-1)" style="width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:#F5F5F5;font-size:18px;cursor:pointer">−</button>
+        <input type="number" id="sc_${idx}_${u}" value="${entry.quantities?.[u]||0}" min="0" style="width:52px;font-size:16px;font-weight:700;text-align:center;padding:4px">
+        <button onclick="stepQty('sc_${idx}_${u}',1)" style="width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:#F5F5F5;font-size:18px;cursor:pointer">+</button>
+        <span style="font-size:11px;color:var(--muted)">${u}</span>
       </div>`).join('')
     }</td></tr>`;
   });
   html+='</table>';
-  document.getElementById('resultTable').innerHTML=html;
+  document.getElementById('resultTable').innerHTML=missedHtml+html;
   document.getElementById('scanResult').style.display='block';
 }
 
@@ -1105,6 +1185,11 @@ function toast(msg){
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
 
 applyTx(); renderAll();
+
+// auto-sync เมื่อเปิดแอป (ถ้ามี scriptUrl)
+if(scriptUrl){
+  setTimeout(()=>{ syncNow().catch(()=>{}); }, 1500);
+}
 </script>
 </body>
 </html>
