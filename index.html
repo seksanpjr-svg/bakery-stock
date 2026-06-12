@@ -52,7 +52,7 @@ body{font-family:var(--font);background:#F5F5F5;color:var(--text);min-height:100
 /* list rows */
 .ing-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #F0F0F0}
 .ing-row:last-child{border-bottom:none}
-.ing-sku{font-size:11px;color:var(--muted);min-width:28px;font-weight:600}
+.ing-sku{font-size:11px;color:#444;min-width:40px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0.5px;background:#F0F0F0;border-radius:4px;padding:2px 5px;text-align:center;flex-shrink:0}
 .ing-info{flex:1;min-width:0}
 .ing-name{font-size:14px;font-weight:500;line-height:1.3}
 .ing-name-my{font-size:12px;color:var(--muted);line-height:1.3}
@@ -441,68 +441,74 @@ function persist(){
 }
 
 function DEFAULT_ING(){
+  // กลุ่ม: เปี๊ยะลาวา → เปี๊ยะทุเรียน → ร้านมัจฉะ → ทั่วไป → ของใช้
   return [
-    {id:'i001',sku:'001',name:'แป้งซอฟเค้ก',nameMy:'ကိတ်မုန့်မှုန့် (နူးညံ့)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i002',sku:'002',name:'แป้งเค้กพัดโบก',nameMy:'ကိတ်မုန့်မှုန့် (ပန်ကာ)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i003',sku:'003',name:'แป้งกวนไส้',nameMy:'အဖြည့်မှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i004',sku:'004',name:'แป้งข้าวโพด',nameMy:'ပြောင်းဖူးမှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i005',sku:'005',name:'ผงโกโก้ทิวลิป',nameMy:'ကိုကိုမှုန့် (တူးလစ်)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i006',sku:'006',name:'น้ำตาลเบเกอรี่',nameMy:'မုန့်ဖုတ်သကြား',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i007',sku:'007',name:'บราวน์ Sugar มิตรผล',nameMy:'အညိုသကြား',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i008',sku:'008',name:'น้ำตาลไอซิ่ง',nameMy:'အိုင်စစ်သကြားမှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i009',sku:'009',name:'น้ำตาลปนละเอียด',nameMy:'သကြားမှုန့် (လင်)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i010',sku:'010',name:'น้ำตาลทรายแดง',nameMy:'သကြားညိုကြမ်း',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i011',sku:'011',name:'ช้อดเทนนิ่ง',nameMy:'ဆော့တနင်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i012',sku:'012',name:'น้ำมันคิง',nameMy:'ကင်းဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i013',sku:'013',name:'น้ำมันรำข้าวคิง',nameMy:'ကင်းဆန်ကောက်ဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i014',sku:'014',name:'น้ำมันถั่วลิสง',nameMy:'မြေပဲဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:2},
-    {id:'i015',sku:'015',name:'กลิ่นวานิลา',nameMy:'ဗနီလာမွှေးရည်',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i016',sku:'016',name:'เจละติน',nameMy:'ဂျယ်လတင်',group:'ทั่วไป',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i017',sku:'017',name:'ผงมันม่วง',nameMy:'ခရမ်းရောင်မှုန့်',group:'ทั่วไป',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i018',sku:'018',name:'แป้งบัวแดง',nameMy:'ဗူးဒမ်းမှုန့်',group:'เปี๊ยะลาวา',units:['ถุง','ลัง','กระสอบ'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i019',sku:'019',name:'นมสด',nameMy:'နွားနို့ (စိမ်း)',group:'เปี๊ยะลาวา',units:['กล่อง','ลัง'],type:'count',supplierId:'',reorder:1},
-    {id:'i020',sku:'020',name:'นมข้นหวาน',nameMy:'နို့စစ်သကြားပါ',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i021',sku:'021',name:'น้ำมัน',nameMy:'ဆီ',group:'เปี๊ยะลาวา',units:['ถุง','ลัง'],type:'bulk',supplierId:'',reorder:2},
-    {id:'i022',sku:'022',name:'น้ำตาล',nameMy:'သကြား',group:'เปี๊ยะลาวา',units:['ถุง','กระสอบ'],type:'bulk',supplierId:'',reorder:1},
-    {id:'i023',sku:'023',name:'ผงวานิลา',nameMy:'ဗနီလာမှုန့်',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:2},
-    {id:'i024',sku:'024',name:'วัตถุกันเสีย',nameMy:'အစားအသောက်ထိန်းဆေး',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i025',sku:'025',name:'สีเหลืองไข่',nameMy:'ကြက်ဥဝါဆိုးဆေး',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:3},
-    {id:'i026',sku:'026',name:'สีน้ำตาลแก่',nameMy:'အညိုရင့်ဆိုးဆေး',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i027',sku:'027',name:'กลิ่นครีมนม',nameMy:'နို့ခရင်မွှေးရည်',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i028',sku:'028',name:'กลิ่นนมเนย',nameMy:'ထောပတ်နို့မွှေးရည်',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i029',sku:'029',name:'ถุงแดง',nameMy:'အိတ်နီ',group:'เปี๊ยะลาวา',units:['ถุง','ลัง'],type:'count',supplierId:'',reorder:1},
-    {id:'i030',sku:'030',name:'น้ำเปล่า',nameMy:'သောက်ရေ',group:'เปี๊ยะลาวา',units:['แพค'],type:'count',supplierId:'',reorder:2},
-    {id:'i031',sku:'031',name:'ไข่เค็มสด',nameMy:'ဆားရည်စိမ်ကြက်ဥ (စိမ်း)',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i053',sku:'032',name:'ไส้ลาวา',nameMy:'လာဗာအနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i054',sku:'033',name:'ไส้ช็อค',nameMy:'ချောကလက်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i055',sku:'034',name:'ไส้ทุเรียน',nameMy:'သစ်ချဉ်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i056',sku:'035',name:'ไส้ฝอยทอง',nameMy:'ရွှေချည်မျှင်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i057',sku:'036',name:'ไข่ไก่',nameMy:'ကြက်ဥ',group:'เปี๊ยะลาวา',units:['ลูก'],type:'count',supplierId:'',reorder:1},
-    {id:'i058',sku:'037',name:'ไข่เค็ม',nameMy:'ဆားရည်စိမ်ဥ',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i032',sku:'038',name:'ทุเรียนกวน',nameMy:'သစ်ချဉ်ကြော်',group:'เปี๊ยะทุเรียน',units:['โล'],type:'bulk',supplierId:'',reorder:5},
-    {id:'i033',sku:'039',name:'ถั่วเขียวซีก',nameMy:'ပဲစိမ်းခွဲ',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:5},
-    {id:'i034',sku:'040',name:'น้ำมันคาโนล่า',nameMy:'ကာနိုလာဆီ',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i035',sku:'041',name:'แบะแซ',nameMy:'မော်လ်တိုစ်ရည်',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i036',sku:'042',name:'สารกันชื้น',nameMy:'စိုထိုင်းမှုစုပ်ဆေး',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i037',sku:'043',name:'สีขาวทุเรียน',nameMy:'သစ်ချဉ်ဖြူဆိုးဆေး',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i038',sku:'044',name:'เหล้าจีน',nameMy:'တရုတ်အရက်',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
-    {id:'i039',sku:'045',name:'ถุงฟ้า',nameMy:'အိတ်ကြည်',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:2},
-    {id:'i040',sku:'046',name:'ถุงม่วง',nameMy:'အိတ်ခရမ်း',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i041',sku:'047',name:'ถุงใส่ทุเรียน',nameMy:'သစ်ချဉ်ထည့်အိတ်',group:'เปี๊ยะทุเรียน',units:['แพค'],type:'count',supplierId:'',reorder:2},
-    {id:'i050',sku:'048',name:'ผ้าถูพื้น',nameMy:'ကြမ်းသုတ်ပဝါ',group:'ของใช้',units:['ผืน'],type:'count',supplierId:'',reorder:1},
-    {id:'i051',sku:'049',name:'นาฬิกาจับเวลา',nameMy:'အချိန်တိုင်းနာရီ',group:'ของใช้',units:['เครื่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i052',sku:'050',name:'ถ่านเครื่องชั่ง',nameMy:'ချိန်ခွင်ဘက်ထရီ',group:'ของใช้',units:['ก้อน'],type:'count',supplierId:'',reorder:2},
-    {id:'i042',sku:'051',name:'อูจิมัจฉะ',nameMy:'ဥဂျီမတ်ချာမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:2},
-    {id:'i043',sku:'052',name:'ถั่วมาเอดะ',nameMy:'မာအေဒါပဲ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i044',sku:'053',name:'ถั่วบดคินาโกะ',nameMy:'ကင်နာကိုမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:3},
-    {id:'i045',sku:'054',name:'ถั่วแดงกวนญี่ปุ่น',nameMy:'ဂျပန်ပဲနီကြော်',group:'ร้านมัจฉะ',units:['กระป๋อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i046',sku:'055',name:'ผงโกโก้แวนโฮเทน',nameMy:'ကိုကိုမှုန့် (ဗန်ဟောက်တန်)',group:'ร้านมัจฉะ',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
-    {id:'i047',sku:'056',name:'ผงสตรอว์เบอร์รี่',nameMy:'စတော်ဘယ်ရီမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i048',sku:'057',name:'แคร็กเกอร์',nameMy:'ကြမ်ကြမ်ကွတ်ကီး',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i049',sku:'058',name:'โอริโอบด',nameMy:'အိုရီအိုကြိတ်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i059',sku:'059',name:'สตอเบอรี่แช่แข็ง',nameMy:'အေးခဲစတော်ဘယ်ရီ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i060',sku:'060',name:'บลูเบอรี่แช่แข็ง',nameMy:'အေးခဲဘလူးဘယ်ရီ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
-    {id:'i061',sku:'061',name:'ครีมชีส ancher',nameMy:'ခရင်မ်ချိစ် (အန်ကာ)',group:'ร้านมัจฉะ',units:['โล'],type:'bulk',supplierId:'',reorder:1},
+    // ── เปี๊ยะลาวา W001–W020 ──
+    {id:'i018',sku:'W001',name:'แป้งบัวแดง',nameMy:'ဗူးဒမ်းမှုန့်',group:'เปี๊ยะลาวา',units:['ถุง','ลัง','กระสอบ'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i019',sku:'W002',name:'นมสด',nameMy:'နွားနို့ (စိမ်း)',group:'เปี๊ยะลาวา',units:['กล่อง','ลัง'],type:'count',supplierId:'',reorder:1},
+    {id:'i020',sku:'W003',name:'นมข้นหวาน',nameMy:'နို့စစ်သကြားပါ',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i021',sku:'W004',name:'น้ำมัน',nameMy:'ဆီ',group:'เปี๊ยะลาวา',units:['ถุง','ลัง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i022',sku:'W005',name:'น้ำตาล',nameMy:'သကြား',group:'เปี๊ยะลาวา',units:['ถุง','กระสอบ'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i057',sku:'W006',name:'ไข่ไก่',nameMy:'ကြက်ဥ',group:'เปี๊ยะลาวา',units:['ลูก'],type:'count',supplierId:'',reorder:1},
+    {id:'i058',sku:'W007',name:'ไข่เค็ม',nameMy:'ဆားရည်စိမ်ဥ',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i031',sku:'W008',name:'ไข่เค็มสด',nameMy:'ဆားရည်စိမ်ကြက်ဥ (စိမ်း)',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i053',sku:'W009',name:'ไส้ลาวา',nameMy:'လာဗာအနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i054',sku:'W010',name:'ไส้ช็อค',nameMy:'ချောကလက်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i055',sku:'W011',name:'ไส้ทุเรียน',nameMy:'သစ်ချဉ်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i056',sku:'W012',name:'ไส้ฝอยทอง',nameMy:'ရွှေချည်မျှင်အနှစ်',group:'เปี๊ยะลาวา',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i023',sku:'W013',name:'ผงวานิลา',nameMy:'ဗနီလာမှုန့်',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:2},
+    {id:'i024',sku:'W014',name:'วัตถุกันเสีย',nameMy:'အစားအသောက်ထိန်းဆေး',group:'เปี๊ยะลาวา',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    {id:'i025',sku:'W015',name:'สีเหลืองไข่',nameMy:'ကြက်ဥဝါဆိုးဆေး',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:3},
+    {id:'i026',sku:'W016',name:'สีน้ำตาลแก่',nameMy:'အညိုရင့်ဆိုးဆေး',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i027',sku:'W017',name:'กลิ่นครีมนม',nameMy:'နို့ခရင်မွှေးရည်',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i028',sku:'W018',name:'กลิ่นนมเนย',nameMy:'ထောပတ်နို့မွှေးရည်',group:'เปี๊ยะลาวา',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i029',sku:'W019',name:'ถุงแดง',nameMy:'အိတ်နီ',group:'เปี๊ยะลาวา',units:['ถุง','ลัง'],type:'count',supplierId:'',reorder:1},
+    {id:'i030',sku:'W020',name:'น้ำเปล่า',nameMy:'သောက်ရေ',group:'เปี๊ยะลาวา',units:['แพค'],type:'count',supplierId:'',reorder:2},
+    // ── เปี๊ยะทุเรียน W021–W030 ──
+    {id:'i032',sku:'W021',name:'ทุเรียนกวน',nameMy:'သစ်ချဉ်ကြော်',group:'เปี๊ยะทุเรียน',units:['โล'],type:'bulk',supplierId:'',reorder:5},
+    {id:'i033',sku:'W022',name:'ถั่วเขียวซีก',nameMy:'ပဲစိမ်းခွဲ',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:5},
+    {id:'i034',sku:'W023',name:'น้ำมันคาโนล่า',nameMy:'ကာနိုလာဆီ',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i035',sku:'W024',name:'แบะแซ',nameMy:'မော်လ်တိုစ်ရည်',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i036',sku:'W025',name:'สารกันชื้น',nameMy:'စိုထိုင်းမှုစုပ်ဆေး',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    {id:'i037',sku:'W026',name:'สีขาวทุเรียน',nameMy:'သစ်ချဉ်ဖြူဆိုးဆေး',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i038',sku:'W027',name:'เหล้าจีน',nameMy:'တရုတ်အရက်',group:'เปี๊ยะทุเรียน',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i039',sku:'W028',name:'ถุงฟ้า',nameMy:'အိတ်ကြည်',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:2},
+    {id:'i040',sku:'W029',name:'ถุงม่วง',nameMy:'အိတ်ခရမ်း',group:'เปี๊ยะทุเรียน',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    {id:'i041',sku:'W030',name:'ถุงใส่ทุเรียน',nameMy:'သစ်ချဉ်ထည့်အိတ်',group:'เปี๊ยะทุเรียน',units:['แพค'],type:'count',supplierId:'',reorder:2},
+    // ── ร้านมัจฉะ W031–W041 ──
+    {id:'i042',sku:'W031',name:'อูจิมัจฉะ',nameMy:'ဥဂျီမတ်ချာမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:2},
+    {id:'i043',sku:'W032',name:'ถั่วมาเอดะ',nameMy:'မာအေဒါပဲ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i044',sku:'W033',name:'ถั่วบดคินาโกะ',nameMy:'ကင်နာကိုမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    {id:'i045',sku:'W034',name:'ถั่วแดงกวนญี่ปุ่น',nameMy:'ဂျပန်ပဲနီကြော်',group:'ร้านมัจฉะ',units:['กระป๋อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i046',sku:'W035',name:'ผงโกโก้แวนโฮเทน',nameMy:'ကိုကိုမှုန့် (ဗန်ဟောက်တန်)',group:'ร้านมัจฉะ',units:['กล่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i047',sku:'W036',name:'ผงสตรอว์เบอร์รี่',nameMy:'စတော်ဘယ်ရီမှုန့်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i048',sku:'W037',name:'แคร็กเกอร์',nameMy:'ကြမ်ကြမ်ကွတ်ကီး',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i049',sku:'W038',name:'โอริโอบด',nameMy:'အိုရီအိုကြိတ်',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i059',sku:'W039',name:'สตอเบอรี่แช่แข็ง',nameMy:'အေးခဲစတော်ဘယ်ရီ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i060',sku:'W040',name:'บลูเบอรี่แช่แข็ง',nameMy:'အေးခဲဘလူးဘယ်ရီ',group:'ร้านมัจฉะ',units:['ถุง'],type:'count',supplierId:'',reorder:1},
+    {id:'i061',sku:'W041',name:'ครีมชีส ancher',nameMy:'ခရင်မ်ချိစ် (အန်ကာ)',group:'ร้านมัจฉะ',units:['โล'],type:'bulk',supplierId:'',reorder:1},
+    // ── ทั่วไป W042–W058 ──
+    {id:'i001',sku:'W042',name:'แป้งซอฟเค้ก',nameMy:'ကိတ်မုန့်မှုန့် (နူးညံ့)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i002',sku:'W043',name:'แป้งเค้กพัดโบก',nameMy:'ကိတ်မုန့်မှုန့် (ပန်ကာ)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i003',sku:'W044',name:'แป้งกวนไส้',nameMy:'အဖြည့်မှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i004',sku:'W045',name:'แป้งข้าวโพด',nameMy:'ပြောင်းဖူးမှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i005',sku:'W046',name:'ผงโกโก้ทิวลิป',nameMy:'ကိုကိုမှုန့် (တူးလစ်)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i006',sku:'W047',name:'น้ำตาลเบเกอรี่',nameMy:'မုန့်ဖုတ်သကြား',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i007',sku:'W048',name:'บราวน์ Sugar มิตรผล',nameMy:'အညိုသကြား',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i008',sku:'W049',name:'น้ำตาลไอซิ่ง',nameMy:'အိုင်စစ်သကြားမှုန့်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i009',sku:'W050',name:'น้ำตาลปนละเอียด',nameMy:'သကြားမှုန့် (လင်)',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i010',sku:'W051',name:'น้ำตาลทรายแดง',nameMy:'သကြားညိုကြမ်း',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:1},
+    {id:'i011',sku:'W052',name:'ช้อดเทนนิ่ง',nameMy:'ဆော့တနင်',group:'ทั่วไป',units:['ถุง'],type:'bulk',supplierId:'',reorder:2},
+    {id:'i012',sku:'W053',name:'น้ำมันคิง',nameMy:'ကင်းဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i013',sku:'W054',name:'น้ำมันรำข้าวคิง',nameMy:'ကင်းဆန်ကောက်ဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i014',sku:'W055',name:'น้ำมันถั่วลิสง',nameMy:'မြေပဲဆီ',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:2},
+    {id:'i015',sku:'W056',name:'กลิ่นวานิลา',nameMy:'ဗနီလာမွှေးရည်',group:'ทั่วไป',units:['ขวด'],type:'count',supplierId:'',reorder:1},
+    {id:'i016',sku:'W057',name:'เจละติน',nameMy:'ဂျယ်လတင်',group:'ทั่วไป',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    {id:'i017',sku:'W058',name:'ผงมันม่วง',nameMy:'ခရမ်းရောင်မှုန့်',group:'ทั่วไป',units:['ถุง'],type:'count',supplierId:'',reorder:3},
+    // ── ของใช้ W059–W061 ──
+    {id:'i050',sku:'W059',name:'ผ้าถูพื้น',nameMy:'ကြမ်းသုတ်ပဝါ',group:'ของใช้',units:['ผืน'],type:'count',supplierId:'',reorder:1},
+    {id:'i051',sku:'W060',name:'นาฬิกาจับเวลา',nameMy:'အချိန်တိုင်းနာရီ',group:'ของใช้',units:['เครื่อง'],type:'count',supplierId:'',reorder:1},
+    {id:'i052',sku:'W061',name:'ถ่านเครื่องชั่ง',nameMy:'ချိန်ခွင်ဘက်ထရီ',group:'ของใช้',units:['ก้อน'],type:'count',supplierId:'',reorder:2},
   ];
 }
 
@@ -593,7 +599,7 @@ function renderAll(){ applyTx(); renderHome(); renderPage(curPage); updateBadge(
 let homeGroup = '__low__'; // '__low__' = default ใกล้หมด, อื่น = ชื่อกลุ่ม
 
 function renderGroupFilter(){
-  const groups = [...new Set(ingredients.map(i=>i.group))];
+  const groups = [...new Set(ingredients.map(i=>i.group))].sort(groupSort);
   const bar = document.getElementById('groupFilterBar');
   const pills = [
     {key:'__low__', label: lang==='my'?'နီးပါးကုန်':'ใกล้หมด'},
@@ -683,11 +689,18 @@ function updateBadge(){
   b.style.display=n?'':'none'; b.textContent=n;
 }
 
+// ==================== GROUP ORDER ====================
+const GROUP_ORDER = ['เปี๊ยะลาวา','เปี๊ยะทุเรียน','ร้านมัจฉะ','ทั่วไป','ของใช้'];
+const groupSort = (a,b) => {
+  const ai=GROUP_ORDER.indexOf(a), bi=GROUP_ORDER.indexOf(b);
+  return (ai<0?99:ai)-(bi<0?99:bi);
+};
+
 // ==================== STOCK ====================
 function renderStock(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
   const sorted=[...ingredients].sort((a,b)=>a.sku.localeCompare(b.sku));
-  const groups=[...new Set(sorted.map(i=>i.group))];
+  const groups=[...new Set(sorted.map(i=>i.group))].sort(groupSort);
   let html='';
   groups.forEach(g=>{
     const items=sorted.filter(i=>i.group===g&&(i.name.toLowerCase().includes(q)||i.sku.includes(q)||(i.nameMy||'').includes(q)));
@@ -831,7 +844,7 @@ function switchStab(tab){
 function renderSettings(){
   const el=document.getElementById('settingsContent');
   if(curStab==='ing'){
-    const groups=[...new Set(ingredients.sort((a,b)=>a.sku.localeCompare(b.sku)).map(i=>i.group))];
+    const groups=[...new Set(ingredients.sort((a,b)=>a.sku.localeCompare(b.sku)).map(i=>i.group))].sort(groupSort);
     let html=`<button class="btn btn-primary btn-full" style="margin-bottom:12px" onclick="openIngModal()">${t('addIng')}</button>`;
     groups.forEach(g=>{
       html+=`<div class="grp-hdr">${g}</div><div class="card" style="margin-top:0;border-radius:0 0 var(--r) var(--r);">`;
